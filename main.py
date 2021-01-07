@@ -1,28 +1,23 @@
 import sys
-from kvdb.kvdb import kv_get, kv_del, kv_set, kv_incrby, kv_incr
-
-
-def get_operations():
-    return {
-        "SET": kv_set,
-        "GET": kv_get,
-        "DEL": kv_del,
-        "INCR": kv_incr,
-        "INCRBY": kv_incrby
-    }
+from kvdb.kvdb import kv_get, kv_del, kv_set, kv_incrby, kv_incr, kv_execute, kv_execute_multiline, kv_compact
 
 if __name__ == "__main__":
     kvdb_dict = {}
+    multiline_commands = []
     while True:
-        command_input = input().split(" ")
-        command = command_input[0]
-        args = command_input[1:len(command_input)]
-        if command in get_operations():
-            operation = get_operations()[command]
-            kwargs = {"key": args[0]}
-            if command in ["SET"]:
-                kwargs = {"key": args[0], "value": args[1]} 
-            
-            print(operation(kvdb_dict, **kwargs))
-        else:
-            print("Operation not defined.")
+        input_command = input()
+        if "COMPACT" in input_command:
+            for compacted in kv_compact(kvdb_dict):
+                print(compacted)
+        elif "MULTI" in input_command:
+            multiline_commands.append(input_command)
+            multiline = True
+            while multiline:
+                multiline_input = input()
+                if multiline_input in ["EXEC", "DISCARD"]:
+                    multiline = False
+                        
+                multiline_commands.append(multiline_input)
+            kv_execute_multiline(kvdb_dict, multiline_commands)
+        else:        
+            kv_execute(kvdb_dict, input_command)

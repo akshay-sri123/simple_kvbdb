@@ -1,15 +1,22 @@
 import unittest
-from kvdb.kvdb import kv_set, kv_get, kv_del, kv_incr, kv_incrby
+from kvdb.kvdb import kv_set, kv_get, kv_del, kv_incr, kv_incrby, kv_execute_multiline, kv_compact
 
 
 class TestKVDB(unittest.TestCase):
     def setUp(self):
         self.test_kvdb = {}
         self.test_key = "a"
+        self.test_new_key = "counter"
         self.test_value = 1
         self.test_value_updated = 10
         self.test_incr_value_by = 11
         self.initial_kvdb_length = len(self.test_kvdb)
+        self.multiline_commands = [
+            "MULTI",
+            "SET "+ self.test_key +" 1",
+            "INCRBY "+ self.test_key +" 9",
+            "INCR "+ self.test_new_key
+        ]
 
     def test_kv_set(self):
         res = kv_set(self.test_kvdb, **{"key": self.test_key, "value": self.test_value})
@@ -71,3 +78,30 @@ class TestKVDB(unittest.TestCase):
         res = kv_incrby(self.test_kvdb, **{"key": self.test_key, "incr_by": self.test_incr_value_by})
 
         self.assertEqual(self.test_incr_value_by, res)
+
+    def test_multiline_exec(self):
+        multiline_command = self.multiline_commands + ["EXEC"]
+        res = kv_execute_multiline(self.test_kvdb, multiline_command)
+
+        self.assertEqual(10, res.get(self.test_key))
+        self.assertEqual(1, res.get(self.test_new_key))
+
+    def test_multiline_discard(self):
+        multiline_command = self.multiline_commands + ["DISCARD"]
+        res = kv_execute_multiline(self.test_kvdb, multiline_command)
+
+        self.assertEqual(None, res.get(self.test_new_key))
+
+    def test_kv_compact(self):
+        res = kv_set(self.test_kvdb, **{"key": self.test_key, "value": self.test_value})
+        res = kv_incrby(self.test_kvdb, **{"key": self.test_key, "incr_by": self.test_incr_value_by})
+        res = kv_incr(self.test_kvdb, **{"key": self.test_key})
+        res = kv_incr(self.test_kvdb, **{"key": self.test_new_key})
+        res = kv_compact(self.test_kvdb)
+
+        expected_output = [
+            "SET {} 13".format(self.test_key),
+            "SET {} 1".format(self.test_new_key)
+        ]
+
+        self.assertEqual(expected_output, res)

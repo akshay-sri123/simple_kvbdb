@@ -28,3 +28,41 @@ INCR counter // increments a "counter" key, if present and returns incremented v
 GET counter // returns 1
 INCRBY counter 10 // increment by 10, returns 11
 INCR foo // automatically creates a new key called "foo" and increments it by 1 and thus returns 1
+
+
+## Story 3: Command spanning multiple sub-commands
+### Case 1: Happy path
+```
+MULTI // starts a multi line commands
+INCR foo // queues this command, doesn't execute it immediately
+SET key1 value1 // queues this command, doesn't execute it immediately
+EXEC // execute all queued commands and returns output of all commands in an array, thus returns: [1 value1]
+```
+### Case 2: Discard
+```
+MULTI // starts a multi line commands
+INCR foo // queues this command, doesn't execute it immediately
+SET key1 value1 // queues this command, doesn't execute it immediately
+DISCARD // discard all queued commands
+GET key1 // returns nil as key1 doesn't exists
+```
+## Story 4: Generate compacted command output (think materialized view of current DB state)
+### Example 1:
+```
+SET counter 10
+INCR counter
+INCR counter
+SET foo bar
+GET counter // returns 12
+INCR counter
+COMPACT // this should return following output
+SET counter 13
+SET foo bar
+```
+### Example 2:
+```
+INCR counter // returns 1
+INCRBY counter 10 // returns 11
+GET counter // returns 11
+DEL counter // deletes counter
+COMPACT // this should compact to empty output as there's no keys present in the DB
