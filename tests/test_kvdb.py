@@ -13,9 +13,9 @@ class TestKVDB(unittest.TestCase):
         self.initial_kvdb_length = len(self.test_kvdb)
         self.multiline_commands = [
             "MULTI",
-            "SET "+ self.test_key +" 1",
-            "INCRBY "+ self.test_key +" 9",
-            "INCR "+ self.test_new_key
+            "SET {} 1".format(self.test_key),
+            "INCRBY {} 9".format(self.test_key),
+            "INCR {}".format(self.test_new_key) 
         ]
 
     def test_kv_set(self):
