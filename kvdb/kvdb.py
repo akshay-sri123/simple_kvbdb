@@ -7,7 +7,7 @@ def kv_set(kv_dict, **kwargs):
 def kv_get(kv_dict, **kwargs):
     key = kwargs.get("key")
     if key in kv_dict:
-        return kv_dict[key]
+        return kv_dict.get(key)
     else:
         return None
 
@@ -19,3 +19,19 @@ def kv_del(kv_dict, **kwargs):
     else:
         return None
 
+def kv_incr(kv_dict, **kwargs):
+    key = kwargs.get("key")
+    if key in kv_dict:
+        kv_dict[key] = int(kv_dict[key]) + 1
+    else:
+        kv_dict[key] = 1
+    return kv_dict[key]
+
+def kv_incrby(kv_dict, **kwargs):
+    key = kwargs.get("key")
+    incr_by = kwargs.get("incr_by")
+    if key in kv_dict:
+        kv_dict[key] = int(kv_dict[key]) + incr_by
+    else:
+        kv_dict[key] = incr_by 
+    return kv_dict[key]
