@@ -3,13 +3,14 @@ from kvdb.kvdb import kv_get, kv_del, kv_set, kv_incrby, kv_incr, kv_execute, kv
 
 if __name__ == "__main__":
     kvdb_dict = {}
-    multiline_commands = []
+    
     while True:
         input_command = input()
         if "COMPACT" in input_command:
             for compacted in kv_compact(kvdb_dict):
                 print(compacted)
         elif "MULTI" in input_command:
+            multiline_commands = []
             multiline_commands.append(input_command)
             multiline = True
             while multiline:
